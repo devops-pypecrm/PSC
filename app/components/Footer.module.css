@@ -156,6 +156,26 @@ a.contactLink:hover {
   color: rgba(255, 255, 255, 0.55);
 }
 
+.legalLinks {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 12px;
+}
+
+.legalLink {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.legalLink:hover {
+  color: #ffffff;
+}
+
 @media (max-width: 1024px) {
   .inner {
     grid-template-columns: 1fr 1fr;

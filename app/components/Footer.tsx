@@ -157,7 +157,13 @@ export default function Footer() {
       </div>
 
       <div className={styles.bottomBar}>
-        <p>© {new Date().getFullYear()} Professional Skill Campus. All rights reserved.</p>
+        <p>
+          © {new Date().getFullYear()} Professional Skill Campus. All rights reserved.
+        </p>
+        <div className={styles.legalLinks}>
+          <a href="/privacy-policy" className={styles.legalLink}>Privacy Policy</a>
+          <a href="/terms-and-conditions" className={styles.legalLink}>Terms &amp; Conditions</a>
+        </div>
       </div>
     </footer>
   );
