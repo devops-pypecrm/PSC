@@ -129,7 +129,7 @@ export default function ProgramsTable({ initialPrograms }: { initialPrograms?: P
                 <th>Program Name</th>
                 <th>Hero Heading</th>
                 <th>About</th>
-                <th>Hero Para</th>
+                <th className={styles.heroParaCell}>Hero Para</th>
                 <th>Duration</th>
                 <th>Added</th>
                 <th>Actions</th>
@@ -156,7 +156,7 @@ export default function ProgramsTable({ initialPrograms }: { initialPrograms?: P
                   <td>{program.name || "—"}</td>
                   <td>{program.heroHeading || "—"}</td>
                   <td>{program.heroAbout || "—"}</td>
-                  <td>{program.heroPara || "—"}</td>
+                  <td className={styles.heroParaCell}>{program.heroPara || "—"}</td>
                   <td>{program.duration || "—"}</td>
                   <td>
                     {program.createdAt
@@ -164,7 +164,7 @@ export default function ProgramsTable({ initialPrograms }: { initialPrograms?: P
                       : "—"}
                   </td>
                   <td>
-                    <div className={styles.actions}>
+                    <div className={styles.actionsColumn}>
                       <button
                         type="button"
                         className={styles.actionButton}

@@ -21,8 +21,10 @@ export default function EnquiriesTable() {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">(
     "loading"
   );
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
 
-  useEffect(() => {
+  const loadEnquiries = () => {
     fetch("/api/enquiries")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load enquiries");
@@ -33,7 +35,41 @@ export default function EnquiriesTable() {
         setStatus("loaded");
       })
       .catch(() => setStatus("error"));
+  };
+
+  useEffect(() => {
+    loadEnquiries();
   }, []);
+
+  const handleDelete = async (enquiry: Enquiry) => {
+    const displayName = enquiry.firstName
+      ? `${enquiry.firstName} ${enquiry.lastName || ""}`.trim()
+      : enquiry.name || enquiry.email;
+
+    if (!window.confirm(`Are you sure you want to delete the enquiry from ${displayName}?`)) {
+      return;
+    }
+
+    setDeletingId(enquiry._id);
+    try {
+      const response = await fetch(`/api/enquiries/${enquiry._id}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete enquiry");
+      }
+
+      setEnquiries((prev) => prev.filter((item) => item._id !== enquiry._id));
+      if (selectedEnquiry?._id === enquiry._id) {
+        setSelectedEnquiry(null);
+      }
+    } catch (err) {
+      alert((err as Error).message || "Couldn't delete this enquiry. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <section className={styles.section}>
@@ -72,6 +108,7 @@ export default function EnquiriesTable() {
                 <th>Enquiry</th>
                 <th>Source</th>
                 <th>Submitted</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -79,20 +116,161 @@ export default function EnquiriesTable() {
                 <tr key={enquiry._id}>
                   <td>{enquiry.firstName || enquiry.name || "—"}</td>
                   <td>{enquiry.lastName || "—"}</td>
-                  <td>{enquiry.phone}</td>
-                  <td>{enquiry.email}</td>
+                  <td>
+                    <a
+                      href={`tel:${enquiry.phone}`}
+                      className={styles.detailLink}
+                    >
+                      {enquiry.phone}
+                    </a>
+                  </td>
+                  <td>
+                    <a
+                      href={`mailto:${enquiry.email}`}
+                      className={styles.detailLink}
+                    >
+                      {enquiry.email}
+                    </a>
+                  </td>
                   <td>{enquiry.company || "—"}</td>
-                  <td>{enquiry.message || "—"}</td>
+                  <td className={styles.messageCell} title={enquiry.message || ""}>
+                    {enquiry.message || "—"}
+                  </td>
                   <td>{enquiry.source || "—"}</td>
                   <td>
                     {enquiry.createdAt
                       ? new Date(enquiry.createdAt).toLocaleString()
                       : "—"}
                   </td>
+                  <td>
+                    <div className={styles.actions}>
+                      <button
+                        type="button"
+                        className={styles.actionButton}
+                        onClick={() => setSelectedEnquiry(enquiry)}
+                      >
+                        View
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.actionButtonDanger}
+                        onClick={() => handleDelete(enquiry)}
+                        disabled={deletingId === enquiry._id}
+                      >
+                        {deletingId === enquiry._id ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {selectedEnquiry && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setSelectedEnquiry(null)}
+        >
+          <div
+            className={styles.modalCard}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <button
+              type="button"
+              className={styles.modalClose}
+              onClick={() => setSelectedEnquiry(null)}
+              aria-label="Close modal"
+            >
+              ×
+            </button>
+
+            <h2 className={styles.modalTitle}>Enquiry Details</h2>
+            <p className={styles.modalSubtitle}>
+              Submitted on{" "}
+              {selectedEnquiry.createdAt
+                ? new Date(selectedEnquiry.createdAt).toLocaleString()
+                : "Unknown date"}
+            </p>
+
+            <div className={styles.detailGrid}>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>First Name</span>
+                <span className={styles.detailValue}>
+                  {selectedEnquiry.firstName || selectedEnquiry.name || "—"}
+                </span>
+              </div>
+
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Last Name</span>
+                <span className={styles.detailValue}>
+                  {selectedEnquiry.lastName || "—"}
+                </span>
+              </div>
+
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Phone</span>
+                <a
+                  href={`tel:${selectedEnquiry.phone}`}
+                  className={`${styles.detailValue} ${styles.detailLink}`}
+                >
+                  {selectedEnquiry.phone}
+                </a>
+              </div>
+
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Email</span>
+                <a
+                  href={`mailto:${selectedEnquiry.email}`}
+                  className={`${styles.detailValue} ${styles.detailLink}`}
+                >
+                  {selectedEnquiry.email}
+                </a>
+              </div>
+
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Company</span>
+                <span className={styles.detailValue}>
+                  {selectedEnquiry.company || "—"}
+                </span>
+              </div>
+
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Source</span>
+                <span className={styles.detailValue}>
+                  {selectedEnquiry.source || "—"}
+                </span>
+              </div>
+
+              <div className={styles.detailItemFull}>
+                <span className={styles.detailLabel}>Message / Query</span>
+                <div className={styles.messageBox}>
+                  {selectedEnquiry.message || "No message provided."}
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button
+                type="button"
+                className={styles.actionButtonDanger}
+                onClick={() => handleDelete(selectedEnquiry)}
+                disabled={deletingId === selectedEnquiry._id}
+              >
+                {deletingId === selectedEnquiry._id ? "Deleting..." : "Delete Enquiry"}
+              </button>
+              <button
+                type="button"
+                className={styles.actionButton}
+                onClick={() => setSelectedEnquiry(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </section>

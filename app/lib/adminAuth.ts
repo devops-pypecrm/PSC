@@ -53,7 +53,8 @@ export function isAdminApiPath(pathname: string): boolean {
     pathname.startsWith("/api/reviews") ||
     pathname.startsWith("/api/skill-creators") ||
     pathname.startsWith("/api/success-categories") ||
-    pathname.startsWith("/api/success-videos")
+    pathname.startsWith("/api/success-videos") ||
+    pathname.startsWith("/api/enquiries/")
   );
 }
 
