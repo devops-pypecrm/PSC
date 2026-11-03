@@ -59,6 +59,8 @@ export default function ProgramDetailsEditor({ program, onBack, onSaved }: Props
   const [careerLogos, setCareerLogos] = useState<string[]>([]);
   const [careerPickerOpen, setCareerPickerOpen] = useState(false);
   const reviewFileRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const brochureInputRef = useRef<HTMLInputElement | null>(null);
+  const sidebarMediaInputRef = useRef<HTMLInputElement | null>(null);
   const [faqSavingIndex, setFaqSavingIndex] = useState<number | null>(null);
   const [faqDraft, setFaqDraft] = useState<ProgramFaq | null>(null);
   const [faqEditingIndex, setFaqEditingIndex] = useState<number | null>(null);
@@ -258,6 +260,33 @@ export default function ProgramDetailsEditor({ program, onBack, onSaved }: Props
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Failed to save details");
     onSaved();
+  };
+
+  const deleteSidebarUpload = async (
+    field: "brochureUrl" | "sidebarMediaUrl"
+  ) => {
+    const label = field === "brochureUrl" ? "brochure" : "sidebar media";
+    if (!window.confirm(`Delete the uploaded ${label}? This cannot be undone.`)) {
+      return;
+    }
+
+    const nextDetails = { ...details, [field]: "" };
+    setStatus("saving");
+    setError("");
+    try {
+      await saveProgramDetails(nextDetails);
+      setDetails((current) => ({ ...current, [field]: "" }));
+      if (field === "brochureUrl" && brochureInputRef.current) {
+        brochureInputRef.current.value = "";
+      }
+      if (field === "sidebarMediaUrl" && sidebarMediaInputRef.current) {
+        sidebarMediaInputRef.current.value = "";
+      }
+      setStatus("idle");
+    } catch (saveError) {
+      setStatus("error");
+      setError((saveError as Error).message);
+    }
   };
 
   const saveFaq = async (index: number) => {
@@ -518,13 +547,25 @@ export default function ProgramDetailsEditor({ program, onBack, onSaved }: Props
           </label>
           <input
             id="brochure-upload"
+            ref={brochureInputRef}
             className={styles.input}
             type="file"
             accept=".pdf,.doc,.docx"
+            disabled={status === "saving"}
             onChange={(event) => handleBrochureChange(event.target.files?.[0])}
           />
           {details.brochureUrl && (
-            <p className={styles.uploaded}>Brochure selected and ready to save.</p>
+            <div className={styles.moduleTopline}>
+              <p className={styles.uploaded}>Brochure selected and ready to save.</p>
+              <button
+                type="button"
+                className={styles.deleteButton}
+                disabled={status === "saving"}
+                onClick={() => deleteSidebarUpload("brochureUrl")}
+              >
+                Delete Brochure
+              </button>
+            </div>
           )}
 
           <label className={styles.label} htmlFor="sidebar-media-upload">
@@ -532,13 +573,25 @@ export default function ProgramDetailsEditor({ program, onBack, onSaved }: Props
           </label>
           <input
             id="sidebar-media-upload"
+            ref={sidebarMediaInputRef}
             className={styles.input}
             type="file"
             accept="image/*,video/*"
+            disabled={status === "saving"}
             onChange={(event) => handleSidebarMediaChange(event.target.files?.[0])}
           />
           {details.sidebarMediaUrl && (
-            <p className={styles.uploaded}>Sidebar media selected and ready to save.</p>
+            <div className={styles.moduleTopline}>
+              <p className={styles.uploaded}>Sidebar media selected and ready to save.</p>
+              <button
+                type="button"
+                className={styles.deleteButton}
+                disabled={status === "saving"}
+                onClick={() => deleteSidebarUpload("sidebarMediaUrl")}
+              >
+                Delete Media
+              </button>
+            </div>
           )}
 
           <div className={styles.moduleHeader}>

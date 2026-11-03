@@ -56,18 +56,26 @@ export default function BlogContentEditor({
   const handleGalleryFiles = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const files = e.target.files;
-    e.target.value = "";
-    if (!files || files.length === 0) return;
+    const files = Array.from(e.currentTarget.files ?? []);
+    e.currentTarget.value = "";
+    if (files.length === 0) return;
+
+    const validFiles = files.filter(
+      (file) =>
+        file.type.startsWith("image/") && file.size <= MAX_RAW_IMAGE_BYTES
+    );
+    if (validFiles.length !== files.length) {
+      setGalleryError("Only image files 10MB or smaller can be added.");
+    } else {
+      setGalleryError("");
+    }
+    if (validFiles.length === 0) return;
 
     setUploading(true);
-    setGalleryError("");
 
     try {
       const newImages: string[] = [];
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith("image/")) continue;
-        if (file.size > MAX_RAW_IMAGE_BYTES) continue;
+      for (const file of validFiles) {
         newImages.push(await compressImageToDataUrl(file, 900, 0.8));
       }
       setGallery((current) => [...current, ...newImages]);
@@ -130,7 +138,7 @@ export default function BlogContentEditor({
           type="button"
           className={styles.saveButton}
           onClick={handleSave}
-          disabled={status === "saving"}
+          disabled={status === "saving" || uploading}
         >
           {status === "saving" ? "Saving..." : "Save"}
         </button>

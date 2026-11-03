@@ -100,7 +100,10 @@ export default function BusinessAdministrationHospitalManagement() {
         <BusinessCurriculum />
         <WhyChooseBusiness />
         <CourseTestimonials programName="Business Administration & Hospital Management" />
-        <ProgramFaqSection programName="Business Administration & Hospital Management" />
+        <ProgramFaqSection
+          programName="Business Administration & Hospital Management"
+          splitIntoColumns
+        />
         <CourseCTA
           programName="Business Administration & Hospital Management"
           category="Online & Offline"

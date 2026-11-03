@@ -205,11 +205,7 @@ export default async function BlogDetailPage({
             <p className={styles.intro}>{blog.sectionPara}</p>
           )}
 
-          {sections.length === 0 ? (
-            <p className={styles.message}>
-              This is view more content for the {name}.
-            </p>
-          ) : (
+          {sections.length > 0 && (
             <div className={styles.contentSections}>
               {sections.map((s, i) => (
                 <div className={styles.contentSection} key={i}>

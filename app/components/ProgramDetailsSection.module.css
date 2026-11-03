@@ -20,6 +20,24 @@
   align-items: start;
 }
 
+.layoutSidebarOnly {
+  grid-template-columns: 1fr 1fr;
+}
+
+.layoutSidebarOnly .sidebar {
+  min-width: 0;
+}
+
+.layoutSidebarNoMedia {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+.layoutSidebarNoMedia .sidebar {
+  min-width: 0;
+}
+
 .main {
   min-width: 0;
   display: flex;
@@ -42,6 +60,10 @@
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.singleTab {
+  cursor: default;
 }
 
 .activeTab {
@@ -448,6 +470,18 @@
   gap: 20px 34px;
 }
 
+.programFaqColumns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 34px;
+}
+
+.programFaqColumn {
+  display: grid;
+  align-content: start;
+  gap: 20px;
+}
+
 .programFaqItem {
   position: relative;
   border: 6px solid #ffffff;
@@ -524,6 +558,15 @@
 
   .programFaqGrid {
     grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .programFaqColumns {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .programFaqColumn {
     gap: 14px;
   }
 

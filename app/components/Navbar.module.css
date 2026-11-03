@@ -196,6 +196,9 @@
 }
 
 .cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   background: #2451e0;
   color: #ffffff;
@@ -213,6 +216,43 @@
 
 .cta:hover {
   background: #1a3fc0;
+}
+
+.loginMenu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.loginDropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  min-width: 160px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid rgba(15, 27, 61, 0.1);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+}
+
+.loginDropdownLink {
+  display: block;
+  padding: 11px 14px;
+  border-radius: 8px;
+  color: #0f1b3d;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.loginDropdownLink:hover,
+.loginDropdownLink:focus-visible {
+  background: #eef2ff;
+  color: #2451e0;
 }
 
 .menuToggle {
@@ -356,6 +396,8 @@
 }
 
 .mobileCta {
+  display: block;
+  width: 100%;
   background: #2451e0;
   color: #ffffff;
   font-size: 15px;
@@ -368,6 +410,30 @@
   text-align: center;
   margin-top: 4px;
   cursor: pointer;
+}
+
+.mobileLoginMenu {
+  position: relative;
+  width: 100%;
+}
+
+.mobileLoginMenu .loginDropdown {
+  position: static;
+  min-width: 0;
+  margin-top: 8px;
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
+.mobileLoginMenu .loginDropdownLink {
+  color: #ffffff;
+}
+
+.mobileLoginMenu .loginDropdownLink:hover,
+.mobileLoginMenu .loginDropdownLink:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
 @media (max-width: 1024px) {

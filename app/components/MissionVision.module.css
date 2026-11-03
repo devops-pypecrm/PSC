@@ -46,8 +46,8 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 14px;
-  padding: 44px 40px;
+  gap: 16px;
+  padding: 44px 32px;
 }
 
 .divider {
@@ -72,13 +72,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.column:nth-child(1) .iconCircle {
-  background: #2451e0;
-}
-
-.column:nth-child(2) .iconCircle {
   background: #0f9d78;
 }
 
@@ -91,11 +84,15 @@
 }
 
 .text {
+  width: 100%;
+  max-width: 420px;
   font-size: 15px;
-  line-height: 1.7;
+  line-height: 1.75;
   color: #445;
   margin: 0;
-  max-width: 320px;
+  text-align: justify;
+  text-justify: inter-word;
+  text-align-last: left;
 }
 
 @media (max-width: 720px) {

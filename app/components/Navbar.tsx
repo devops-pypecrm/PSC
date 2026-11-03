@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import styles from "./Navbar.module.css";
 import {
@@ -24,6 +25,34 @@ const navLinksAfterLogin = [
 ];
 
 const STUDENTS_LOGIN_URL = "/students-login";
+const FACULTY_LOGIN_URL = "/faculty-login";
+
+function LoginDropdown({ onSelect }: { onSelect: () => void }) {
+  return (
+    <ul className={styles.loginDropdown} role="menu" aria-label="Login options">
+      <li role="none">
+        <Link
+          href={STUDENTS_LOGIN_URL}
+          className={styles.loginDropdownLink}
+          role="menuitem"
+          onClick={onSelect}
+        >
+          Student
+        </Link>
+      </li>
+      <li role="none">
+        <Link
+          href={FACULTY_LOGIN_URL}
+          className={styles.loginDropdownLink}
+          role="menuitem"
+          onClick={onSelect}
+        >
+          Faculty
+        </Link>
+      </li>
+    </ul>
+  );
+}
 
 function ChevronDown({ className }: { className?: string } = {}) {
   return (
@@ -94,6 +123,7 @@ function CoursesDropdown({ groups }: { groups: ProgramGroup[] }) {
 export default function Navbar({ initialPrograms }: { initialPrograms?: Program[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [mobileProgramsOpen, setMobileProgramsOpen] = useState(false);
+  const [loginMenuOpen, setLoginMenuOpen] = useState(false);
   const { groups: programGroups, reload: reloadPrograms } = usePrograms(
     initialPrograms,
     false,
@@ -102,6 +132,30 @@ export default function Navbar({ initialPrograms }: { initialPrograms?: Program[
   const pathname = usePathname();
   const router = useRouter();
   const logoClickTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (
+        event.target instanceof Element &&
+        event.target.closest("[data-login-menu]")
+      ) {
+        return;
+      }
+      setLoginMenuOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setLoginMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
 
   const isActive = (href: string) => href !== "#" && pathname === href;
   const linkClass = (href: string) =>
@@ -186,12 +240,25 @@ export default function Navbar({ initialPrograms }: { initialPrograms?: Program[
           </a>
         </nav>
 
-        <a
-          href={STUDENTS_LOGIN_URL}
-          className={styles.cta}
-        >
-          Students Login
-        </a>
+        <div className={styles.loginMenu} data-login-menu>
+          <button
+            type="button"
+            className={styles.cta}
+            aria-haspopup="menu"
+            aria-expanded={loginMenuOpen}
+            onClick={() => setLoginMenuOpen((open) => !open)}
+          >
+            Login
+          </button>
+          {loginMenuOpen && (
+            <LoginDropdown
+              onSelect={() => {
+                setLoginMenuOpen(false);
+                setIsOpen(false);
+              }}
+            />
+          )}
+        </div>
 
         <button
           type="button"
@@ -276,13 +343,25 @@ export default function Navbar({ initialPrograms }: { initialPrograms?: Program[
             </div>
           )}
         </nav>
-        <a
-          href={STUDENTS_LOGIN_URL}
-          className={styles.mobileCta}
-          onClick={() => setIsOpen(false)}
-        >
-          Students Login
-        </a>
+        <div className={styles.mobileLoginMenu} data-login-menu>
+          <button
+            type="button"
+            className={styles.mobileCta}
+            aria-haspopup="menu"
+            aria-expanded={loginMenuOpen}
+            onClick={() => setLoginMenuOpen((open) => !open)}
+          >
+            Login
+          </button>
+          {loginMenuOpen && (
+            <LoginDropdown
+              onSelect={() => {
+                setLoginMenuOpen(false);
+                setIsOpen(false);
+              }}
+            />
+          )}
+        </div>
       </div>
 
     </header>

@@ -18,9 +18,12 @@
 .content {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 22px;
   max-width: 690px;
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .badge {
@@ -39,6 +42,7 @@
 }
 
 .heading {
+  width: 100%;
   font-family: var(--font-bitcount-prop-single), sans-serif;
   font-size: clamp(42px, 5.5vw, 64px);
   line-height: 1.12;
@@ -53,16 +57,20 @@
 }
 
 .subheading {
+  width: 100%;
   font-size: 18px;
   line-height: 1.8;
   color: #24365d;
   margin: 0;
   max-width: 680px;
+  text-align: center;
 }
 
 .checklist {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  width: 100%;
   gap: 12px;
   list-style: none;
   margin: 8px 0 0;
@@ -71,8 +79,12 @@
 
 .checkItem {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 14px;
+}
+
+.checkItem > div {
+  text-align: center;
 }
 
 .checkTitle {
@@ -91,6 +103,7 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 18px;
   margin-top: 16px;
 }
@@ -216,6 +229,8 @@
 
   .actions {
     flex-direction: column;
+    align-items: center;
+    width: 100%;
   }
 
   .primaryButton,

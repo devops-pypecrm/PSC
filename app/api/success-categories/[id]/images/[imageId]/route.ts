@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import getClientPromise from "../../../../../../lib/mongodb";
+import { isValidSuccessImageDataUrl } from "../../../../../lib/successStoryImageValidation";
 
 export const dynamic = "force-dynamic";
 
@@ -30,12 +31,17 @@ export async function PATCH(
       );
     }
 
-    const body = await request.json();
-    const src = String(body.image || "").trim();
-
-    if (!src) {
+    const body: unknown = await request.json();
+    if (!body || typeof body !== "object" || !("image" in body)) {
       return NextResponse.json(
-        { error: "A replacement image is required" },
+        { error: "A valid JPEG image under 1MB is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidSuccessImageDataUrl(body.image)) {
+      return NextResponse.json(
+        { error: "A valid JPEG image under 1MB is required" },
         { status: 400 }
       );
     }
@@ -46,7 +52,7 @@ export async function PATCH(
       .collection<SuccessCategoryDoc>(COLLECTION)
       .updateOne(
         { _id: new ObjectId(id), "images.id": imageId },
-        { $set: { "images.$.src": src, updatedAt: new Date() } }
+        { $set: { "images.$.src": body.image, updatedAt: new Date() } }
       );
 
     if (result.matchedCount === 0) {

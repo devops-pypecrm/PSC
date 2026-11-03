@@ -9,12 +9,28 @@ const COLLECTION = "faqs";
 export async function GET() {
   try {
     const client = await getClientPromise();
-    const faqs = await client
+    const storedFaqs = await client
       .db(DB_NAME)
       .collection(COLLECTION)
       .find({})
-      .sort({ createdAt: -1 })
       .toArray();
+    const faqs = storedFaqs.sort((a, b) => {
+      const aOrder =
+        typeof a.homepageOrder === "number" &&
+        Number.isInteger(a.homepageOrder)
+          ? a.homepageOrder
+          : null;
+      const bOrder =
+        typeof b.homepageOrder === "number" &&
+        Number.isInteger(b.homepageOrder)
+          ? b.homepageOrder
+          : null;
+
+      if (aOrder !== null && bOrder !== null) return aOrder - bOrder;
+      if (aOrder !== null) return -1;
+      if (bOrder !== null) return 1;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
     return NextResponse.json({ faqs });
   } catch (error) {

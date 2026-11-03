@@ -29,6 +29,99 @@
   box-shadow: 0 14px 30px rgba(15, 27, 61, 0.06);
 }
 
+.coverSection {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 22px;
+  border: 1px solid #e6eaf5;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 14px 30px rgba(15, 27, 61, 0.06);
+}
+
+.coverPreview {
+  display: flex;
+  flex: 0 0 140px;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 9 / 14;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f0f2f8;
+  color: #6b7ba8;
+  text-align: center;
+}
+
+.coverPreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.coverPreview p {
+  padding: 12px;
+  font-size: 13px;
+}
+
+.coverControls {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.coverControls h2,
+.coverControls p {
+  margin: 0;
+}
+
+.coverControls .createButton {
+  align-self: flex-start;
+}
+
+.coverActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.removeButton {
+  align-self: flex-start;
+  padding: 11px 22px;
+  border: 1px solid #d92b3f;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #d92b3f;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.removeButton:hover {
+  background: #fdeeee;
+}
+
+.removeButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+@media (max-width: 560px) {
+  .coverSection {
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .coverPreview {
+    flex-basis: 100px;
+  }
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -221,4 +314,10 @@
   border: none;
   object-fit: cover;
   background: #000;
+}
+
+.player iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
 }

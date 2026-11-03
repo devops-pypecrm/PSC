@@ -82,6 +82,23 @@
   border: 1px solid #d7ddec;
 }
 
+.removeImageButton {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border: 1px solid #f0c9ce;
+  border-radius: 8px;
+  background: #fff;
+  color: #d92b3f;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.removeImageButton:hover {
+  background: #fdeeee;
+}
+
 .fileInput {
   flex: 1;
   min-width: 0;

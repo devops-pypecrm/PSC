@@ -27,7 +27,7 @@ const sections: Section[] = [
   { label: "Events", endpoint: "/api/events", key: "events", view: "events" },
   { label: "Directors", endpoint: "/api/directors", key: "directors", view: "directors" },
   { label: "Contacts", endpoint: "/api/contacts", key: "contacts", view: "contacts" },
-  { label: "Skill Creators", endpoint: "/api/skill-creators", key: "creators", view: "skillCreators" },
+  { label: "Skill Creators", endpoint: "/api/skill-creators", key: "skillCreators", view: "skillCreators" },
   { label: "Success Stories", endpoint: "/api/success-categories", key: "categories", view: "successStories" },
   { label: "Success Videos", endpoint: "/api/success-videos", key: "videos", view: "successVideos" },
   { label: "Notifications", endpoint: "/api/page-notifications", key: "notifications", view: "notifications" },

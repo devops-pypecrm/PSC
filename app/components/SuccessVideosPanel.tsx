@@ -9,6 +9,11 @@ import {
   type SuccessVideo,
   type VideoSourceType,
 } from "../lib/successVideoUtils";
+import YouTubePlayer from "./YouTubePlayer";
+import {
+  compressImageToDataUrl,
+  MAX_RAW_IMAGE_BYTES,
+} from "../lib/imageUpload";
 
 function TrashIcon() {
   return (
@@ -56,14 +61,21 @@ export default function SuccessVideosPanel() {
   );
 
   const [sourceType, setSourceType] = useState<VideoSourceType>("youtube");
-  const [linkValue, setLinkValue] = useState("");
+  const [linkValue, setLinkValue] = useState<string>("");
   const [fileDataUrl, setFileDataUrl] = useState("");
   const [fileName, setFileName] = useState("");
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState("");
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [coverImage, setCoverImage] = useState("");
+  const [pendingCoverImage, setPendingCoverImage] = useState("");
+  const [savingCoverImage, setSavingCoverImage] = useState(false);
+  const [removingCoverImage, setRemovingCoverImage] = useState(false);
+  const [coverImageError, setCoverImageError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverImageInputRef = useRef<HTMLInputElement>(null);
+  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
   const load = useCallback(() => {
     setStatus("loading");
@@ -74,6 +86,7 @@ export default function SuccessVideosPanel() {
       })
       .then((data) => {
         setVideos(data.videos || []);
+        setCoverImage(data.coverImage || "");
         setStatus("loaded");
       })
       .catch(() => setStatus("error"));
@@ -82,6 +95,23 @@ export default function SuccessVideosPanel() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!playingId) return;
+    const player = videoRefs.current[playingId];
+    if (!player) return;
+
+    player.currentTime = 0;
+    void player.play().catch((error: unknown) => {
+      console.error("Failed to play success video", error);
+      setPlayingId((current) => (current === playingId ? null : current));
+    });
+
+    return () => {
+      player.pause();
+      player.currentTime = 0;
+    };
+  }, [playingId]);
 
   const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -167,9 +197,152 @@ export default function SuccessVideosPanel() {
     }
   };
 
+  const handleCoverImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setCoverImageError("Please choose an image file.");
+      return;
+    }
+    if (file.size > MAX_RAW_IMAGE_BYTES) {
+      setCoverImageError("The selected image must be 10MB or smaller.");
+      return;
+    }
+
+    try {
+      const dataUrl = await compressImageToDataUrl(file, 900, 0.8);
+      setPendingCoverImage(dataUrl);
+      setCoverImageError("");
+    } catch (error) {
+      setCoverImageError(
+        error instanceof Error ? error.message : "Couldn't process that image."
+      );
+    }
+  };
+
+  const saveCoverImage = async () => {
+    if (!pendingCoverImage) return;
+
+    setSavingCoverImage(true);
+    setCoverImageError("");
+    try {
+      const response = await fetch("/api/success-videos", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ coverImage: pendingCoverImage }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Couldn't save the cover image.");
+      }
+
+      setCoverImage(pendingCoverImage);
+      setPendingCoverImage("");
+      if (coverImageInputRef.current) {
+        coverImageInputRef.current.value = "";
+      }
+    } catch (error) {
+      setCoverImageError(
+        error instanceof Error ? error.message : "Couldn't save the cover image."
+      );
+    } finally {
+      setSavingCoverImage(false);
+    }
+  };
+
+  const removeCoverImage = async () => {
+    if (!coverImage || !confirm("Remove the common cover image?")) return;
+
+    setRemovingCoverImage(true);
+    setCoverImageError("");
+    try {
+      const response = await fetch("/api/success-videos", {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Couldn't remove the cover image.");
+      }
+
+      setCoverImage("");
+      setPendingCoverImage("");
+      if (coverImageInputRef.current) {
+        coverImageInputRef.current.value = "";
+      }
+    } catch (error) {
+      setCoverImageError(
+        error instanceof Error ? error.message : "Couldn't remove the cover image."
+      );
+    } finally {
+      setRemovingCoverImage(false);
+    }
+  };
+
   return (
     <div className={styles.page}>
       <h1 className={styles.pageHeading}>Add Success</h1>
+      <div className={styles.divider} />
+
+      <section className={styles.coverSection} aria-labelledby="video-cover-heading">
+        <div className={styles.coverPreview}>
+          {(pendingCoverImage || coverImage) ? (
+            <Image
+              src={pendingCoverImage || coverImage}
+              alt="Common success video cover preview"
+              width={180}
+              height={280}
+              unoptimized
+            />
+          ) : (
+            <p>No common cover image selected.</p>
+          )}
+        </div>
+        <div className={styles.coverControls}>
+          <h2 id="video-cover-heading" className={styles.label}>
+            Common Video Cover
+          </h2>
+          <p className={styles.fileHint}>
+            This image appears on every success video card before playback.
+          </p>
+          <input
+            ref={coverImageInputRef}
+            id="success-video-cover"
+            type="file"
+            accept="image/*"
+            className={styles.fileInput}
+            onChange={handleCoverImageChange}
+          />
+          <div className={styles.coverActions}>
+            <button
+              type="button"
+              className={styles.createButton}
+              onClick={saveCoverImage}
+              disabled={!pendingCoverImage || savingCoverImage || removingCoverImage}
+            >
+              {savingCoverImage ? "Saving cover..." : "Save Common Cover"}
+            </button>
+            {coverImage && (
+              <button
+                type="button"
+                className={styles.removeButton}
+                onClick={removeCoverImage}
+                disabled={savingCoverImage || removingCoverImage}
+              >
+                {removingCoverImage ? "Removing cover..." : "Remove Cover Image"}
+              </button>
+            )}
+          </div>
+          {coverImageError && (
+            <p className={styles.formError} role="alert">
+              {coverImageError}
+            </p>
+          )}
+        </div>
+      </section>
+
       <div className={styles.divider} />
 
       <form className={styles.form} onSubmit={handleSubmit}>
@@ -200,6 +373,7 @@ export default function SuccessVideosPanel() {
               Upload Video
             </label>
             <input
+              key="video-file"
               ref={fileInputRef}
               id="video-file"
               type="file"
@@ -219,6 +393,7 @@ export default function SuccessVideosPanel() {
               {sourceType === "drive" && "Google Drive Link"}
             </label>
             <input
+              key="video-link"
               id="video-link"
               type="url"
               className={styles.input}
@@ -229,7 +404,7 @@ export default function SuccessVideosPanel() {
                   ? "https://instagram.com/reel/..."
                   : "https://drive.google.com/file/d/.../view"
               }
-              value={linkValue}
+              value={linkValue ?? ""}
               onChange={(e) => setLinkValue(e.target.value)}
             />
           </div>
@@ -279,23 +454,31 @@ export default function SuccessVideosPanel() {
                     height={32}
                   />
                 </div>
-
                 {playingId === video._id ? (
                   video.sourceType === "upload" ? (
-                    // eslint-disable-next-line jsx-a11y/media-has-caption
                     <video
                       src={video.url}
                       controls
-                      autoPlay
+                      ref={(player) => {
+                        videoRefs.current[video._id] = player;
+                      }}
                       className={styles.player}
                     />
                   ) : (
-                    <iframe
-                      src={toEmbedUrl(video)}
-                      className={styles.player}
-                      allow="autoplay; encrypted-media"
-                      allowFullScreen
-                    />
+                    video.sourceType === "youtube" ? (
+                      <YouTubePlayer
+                        video={video}
+                        autoPlay
+                        className={styles.player}
+                      />
+                    ) : (
+                      <iframe
+                        src={toEmbedUrl(video)}
+                        className={styles.player}
+                        allow="autoplay; encrypted-media"
+                        allowFullScreen
+                      />
+                    )
                   )
                 ) : (
                   <button

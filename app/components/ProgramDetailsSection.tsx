@@ -14,7 +14,26 @@ type Props = {
   programName: string;
 };
 
-const tabs = ["Overview", "Curriculum", "Benefits"] as const;
+type TabType = "Overview" | "Curriculum" | "Benefits";
+
+const getSupportedMediaUrl = (value: unknown): string | null => {
+ if (typeof value !== "string") return null;
+
+ const url = value.trim();
+ if (!url) return null;
+ if (/^data:(?:image|video)\/[a-z0-9.+-]+(?:;[^,]*)?,[\s\S]+$/i.test(url)) {
+   return url;
+ }
+
+ try {
+   const parsedUrl = new URL(url, "https://psc.invalid");
+   return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:"
+     ? url
+     : null;
+ } catch {
+   return null;
+ }
+};
 
 const fallbackDetails: ProgramDetails = {
   overview: "",
@@ -40,7 +59,6 @@ export default function ProgramDetailsSection({
   category,
   programName,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("Overview");
   const [openModule, setOpenModule] = useState<number | null>(0);
   const [consultOpen, setConsultOpen] = useState(false);
   const content: ProgramDetails = {
@@ -55,47 +73,136 @@ export default function ProgramDetailsSection({
     faqs: details?.faqs || [],
   };
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const overviewParagraphs = content.overview.split(/\n\s*\n/).filter(Boolean);
+  const [failedSidebarMediaUrl, setFailedSidebarMediaUrl] = useState<string | null>(
+    null
+  );
+
+  const overviewParagraphs = (content.overview || "")
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const curriculumModules = (content.curriculumModules || []).filter(
+    (module) => Boolean(module.heading?.trim() || module.para?.trim())
+  );
+
+  const benefitsItems = (content.benefitsItems || []).filter(
+    (benefit) => Boolean(benefit.heading?.trim() || benefit.para?.trim())
+  );
+
+  const hasOverview = overviewParagraphs.length > 0;
+  const hasCurriculum = curriculumModules.length > 0;
+  const hasBenefits =
+    benefitsItems.length > 0 ||
+    Boolean(content.benefitsHeading?.trim()) ||
+    Boolean(content.benefitsPara?.trim());
+
+  const availableTabs: TabType[] = [];
+  if (hasOverview) availableTabs.push("Overview");
+  if (hasCurriculum) availableTabs.push("Curriculum");
+  if (hasBenefits) availableTabs.push("Benefits");
+
+  const [selectedTab, setSelectedTab] = useState<TabType | null>(null);
+  const activeTab =
+    selectedTab && availableTabs.includes(selectedTab)
+      ? selectedTab
+      : (availableTabs[0] ?? null);
+
+  const sidebarMediaUrl = getSupportedMediaUrl(content.sidebarMediaUrl);
+  const hasSidebarMedia =
+    sidebarMediaUrl !== null && failedSidebarMediaUrl !== sidebarMediaUrl;
+  const videoCard = hasSidebarMedia && sidebarMediaUrl ? (
+    <div className={styles.videoCard}>
+      {sidebarMediaUrl.startsWith("data:video/") ? (
+        <video
+          className={styles.sidebarMedia}
+          src={sidebarMediaUrl}
+          controls
+          onError={() => setFailedSidebarMediaUrl(sidebarMediaUrl)}
+        />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className={styles.sidebarMedia}
+          src={sidebarMediaUrl}
+          alt={`${programName} media`}
+          onError={() => setFailedSidebarMediaUrl(sidebarMediaUrl)}
+        />
+      )}
+    </div>
+  ) : null;
+
+  const faqMidpoint = Math.ceil(content.faqs.length / 2);
+  const renderFaq = (faq: ProgramDetails["faqs"][number], index: number) => {
+    const isOpen = openFaq === index;
+    return (
+      <article className={styles.programFaqItem} key={`${faq.question}-${index}`}>
+        <SketchFrame className={styles.programFaqSketchFrame} rx={12} />
+        <button
+          type="button"
+          className={styles.programFaqTrigger}
+          onClick={() => setOpenFaq(isOpen ? null : index)}
+          aria-expanded={isOpen}
+        >
+          <span>{faq.question}</span>
+          <span className={styles.programFaqIcon}>{isOpen ? "−" : "+"}</span>
+        </button>
+        {isOpen && <p className={styles.programFaqAnswer}>{faq.answer}</p>}
+      </article>
+    );
+  };
+
   return (
     <section className={styles.section}>
-      <h2 className={styles.heading}>What you will learn?</h2>
-      <div className={styles.layout}>
-        <div className={styles.main}>
-          <div className={styles.tabs}>
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                className={`${styles.tab} ${activeTab === tab ? styles.activeTab : ""}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
+      {availableTabs.length > 0 && (
+        <h2 className={styles.heading}>What you will learn?</h2>
+      )}
+      <div
+        className={`${styles.layout} ${
+          availableTabs.length === 0
+            ? hasSidebarMedia
+              ? styles.layoutSidebarOnly
+              : styles.layoutSidebarNoMedia
+            : ""
+        }`}
+      >
+        {availableTabs.length > 0 && (
+          <div className={styles.main}>
+            <div className={styles.tabs}>
+              {availableTabs.map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  className={`${styles.tab} ${
+                    activeTab === tab ? styles.activeTab : ""
+                  } ${availableTabs.length === 1 ? styles.singleTab : ""}`}
+                  onClick={() => setSelectedTab(tab)}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
 
-          <div className={styles.panel}>
-            {activeTab === "Overview" && (
-              <div className={styles.copy}>
-                {overviewParagraphs.length > 0 ? (
-                  overviewParagraphs.map((paragraph, index) => (
+            <div className={styles.panel}>
+              {activeTab === "Overview" && hasOverview && (
+                <div className={styles.copy}>
+                  {overviewParagraphs.map((paragraph, index) => (
                     <p key={`${paragraph.slice(0, 20)}-${index}`}>{paragraph}</p>
-                  ))
-                ) : (
-                  <p className={styles.empty}>Overview details will be added soon.</p>
-                )}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
 
-            {activeTab === "Curriculum" && (
-              <div className={styles.curriculum}>
-                <h3>{content.curriculumHeading || "Complete Course Module"}</h3>
-                {content.curriculumModules.length > 0 ? (
+              {activeTab === "Curriculum" && hasCurriculum && (
+                <div className={styles.curriculum}>
+                  <h3>{content.curriculumHeading || "Complete Course Module"}</h3>
                   <div className={styles.accordion}>
-                    {content.curriculumModules.map((module, index) => {
+                    {curriculumModules.map((module, index) => {
                       const isOpen = openModule === index;
                       return (
-                        <div className={styles.module} key={`${module.heading}-${index}`}>
+                        <div
+                          className={styles.module}
+                          key={`${module.heading}-${index}`}
+                        >
                           <button
                             type="button"
                             className={styles.moduleTrigger}
@@ -105,52 +212,45 @@ export default function ProgramDetailsSection({
                             <span>{module.heading}</span>
                             <span className={styles.icon}>{isOpen ? "−" : "+"}</span>
                           </button>
-                          {isOpen && <p className={styles.modulePara}>{module.para}</p>}
+                          {isOpen && (
+                            <p className={styles.modulePara}>{module.para}</p>
+                          )}
                         </div>
                       );
                     })}
                   </div>
-                ) : (
-                  <p className={styles.empty}>Curriculum modules will be added soon.</p>
-                )}
-              </div>
-            )}
+                </div>
+              )}
 
-            {activeTab === "Benefits" && (
-              <div className={styles.benefits}>
-                {content.benefitsItems.length > 0 ? (
-                  content.benefitsItems.map((benefit, index) => (
-                    <article className={styles.benefitItem} key={`${benefit.heading}-${index}`}>
-                      <h3>{benefit.heading}</h3>
-                      <p>{benefit.para}</p>
+              {activeTab === "Benefits" && hasBenefits && (
+                <div className={styles.benefits}>
+                  {benefitsItems.length > 0 ? (
+                    benefitsItems.map((benefit, index) => (
+                      <article
+                        className={styles.benefitItem}
+                        key={`${benefit.heading}-${index}`}
+                      >
+                        <h3>{benefit.heading}</h3>
+                        <p>{benefit.para}</p>
+                      </article>
+                    ))
+                  ) : (
+                    <article className={styles.benefitItem}>
+                      {content.benefitsHeading && (
+                        <h3>{content.benefitsHeading}</h3>
+                      )}
+                      {content.benefitsPara && <p>{content.benefitsPara}</p>}
                     </article>
-                  ))
-                ) : content.benefitsHeading || content.benefitsPara ? (
-                  <article className={styles.benefitItem}>
-                    <h3>{content.benefitsHeading}</h3>
-                    <p>{content.benefitsPara}</p>
-                  </article>
-                ) : (
-                  <p className={styles.empty}>Benefits details will be added soon.</p>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
+        {availableTabs.length === 0 && videoCard}
         <aside className={styles.sidebar}>
-          <div className={styles.videoCard} aria-hidden="true">
-            {content.sidebarMediaUrl ? (
-              content.sidebarMediaUrl.startsWith("data:video/") ? (
-                <video className={styles.sidebarMedia} src={content.sidebarMediaUrl} controls />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img className={styles.sidebarMedia} src={content.sidebarMediaUrl} alt={`${programName} media`} />
-              )
-            ) : (
-              <span className={styles.playButton}>▷</span>
-            )}
-          </div>
+          {availableTabs.length > 0 && videoCard}
 
           <div className={styles.detailsCard}>
             <div className={styles.detailRow}>→ <span>Duration: {duration || "4 months"}</span></div>
@@ -239,25 +339,15 @@ export default function ProgramDetailsSection({
           <h2 id="program-faq-heading" className={styles.programFaqHeading}>
             Frequently Asked Questions
           </h2>
-          <div className={styles.programFaqGrid}>
-            {content.faqs.map((faq, index) => {
-              const isOpen = openFaq === index;
-              return (
-                <article className={styles.programFaqItem} key={`${faq.question}-${index}`}>
-                  <SketchFrame className={styles.programFaqSketchFrame} rx={12} />
-                  <button
-                    type="button"
-                    className={styles.programFaqTrigger}
-                    onClick={() => setOpenFaq(isOpen ? null : index)}
-                    aria-expanded={isOpen}
-                  >
-                    <span>{faq.question}</span>
-                    <span className={styles.programFaqIcon}>{isOpen ? "−" : "+"}</span>
-                  </button>
-                  {isOpen && <p className={styles.programFaqAnswer}>{faq.answer}</p>}
-                </article>
-              );
-            })}
+          <div className={styles.programFaqColumns}>
+            <div className={styles.programFaqColumn}>
+              {content.faqs.slice(0, faqMidpoint).map(renderFaq)}
+            </div>
+            <div className={styles.programFaqColumn}>
+              {content.faqs
+                .slice(faqMidpoint)
+                .map((faq, index) => renderFaq(faq, faqMidpoint + index))}
+            </div>
           </div>
         </section>
       )}

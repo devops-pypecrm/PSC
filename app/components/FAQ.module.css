@@ -1,7 +1,7 @@
 .section {
   position: relative;
   overflow: hidden;
-  padding: 72px 24px 96px;
+  padding: 36px 24px 96px;
 }
 
 .header {
@@ -128,7 +128,7 @@
 
 @media (max-width: 560px) {
   .section {
-    padding: 56px 16px 72px;
+    padding: 28px 16px 72px;
   }
 
   .question {

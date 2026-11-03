@@ -112,6 +112,12 @@ export default function SkillCreatorsPanel() {
     }
   };
 
+  const handleRemoveImage = () => {
+    setImage("");
+    setFormError("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -209,8 +215,17 @@ export default function SkillCreatorsPanel() {
           </label>
           <div className={styles.imageRow}>
             {image && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={image} alt="" className={styles.imagePreview} />
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={image} alt="" className={styles.imagePreview} />
+                <button
+                  type="button"
+                  className={styles.removeImageButton}
+                  onClick={handleRemoveImage}
+                >
+                  Remove Image
+                </button>
+              </>
             )}
             <input
               ref={fileInputRef}

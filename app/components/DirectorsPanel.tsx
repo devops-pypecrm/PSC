@@ -95,6 +95,12 @@ export default function DirectorsPanel() {
     }
   };
 
+  const handleRemoveImage = () => {
+    setImage("");
+    setFormError("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -176,6 +182,15 @@ export default function DirectorsPanel() {
             {image && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={image} alt="" className={styles.imagePreview} />
+            )}
+            {image && (
+              <button
+                type="button"
+                className={styles.removeImageButton}
+                onClick={handleRemoveImage}
+              >
+                Remove Image
+              </button>
             )}
             <input
               ref={fileInputRef}

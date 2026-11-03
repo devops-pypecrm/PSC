@@ -3,4 +3,5 @@ export type Faq = {
   question: string;
   answer: string;
   createdAt: string;
+  homepageOrder?: number;
 };

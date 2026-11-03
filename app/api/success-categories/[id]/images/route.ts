@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { randomUUID } from "node:crypto";
 import getClientPromise from "../../../../../lib/mongodb";
+import { isValidSuccessImageDataUrl } from "../../../../lib/successStoryImageValidation";
 
 export const dynamic = "force-dynamic";
 
@@ -15,8 +16,6 @@ type SuccessCategoryDoc = {
   updatedAt?: Date;
 };
 
-// Adds one or more images to a category in one call — supports the
-// multi-select file input in the admin gallery uploader.
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -31,18 +30,58 @@ export async function POST(
       );
     }
 
-    const body = await request.json();
-    const rawImages = Array.isArray(body.images) ? body.images : [];
-    const images = rawImages
-      .map((src: unknown) => String(src || "").trim())
-      .filter(Boolean)
-      .map((src: string) => ({ id: randomUUID(), src }));
-
-    if (images.length === 0) {
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
       return NextResponse.json(
-        { error: "At least one image is required" },
+        { error: "Invalid image upload request" },
         { status: 400 }
       );
+    }
+
+    if (!body || typeof body !== "object" || !("images" in body)) {
+      return NextResponse.json(
+        { error: "Invalid image upload request" },
+        { status: 400 }
+      );
+    }
+
+    const rawImages = body.images;
+    if (
+      !Array.isArray(rawImages) ||
+      rawImages.length === 0 ||
+      rawImages.length > 10
+    ) {
+      return NextResponse.json(
+        { error: "Upload between 1 and 10 images at a time" },
+        { status: 400 }
+      );
+    }
+
+    const images: { id: string; src: string }[] = [];
+    for (const item of rawImages) {
+      const id =
+        item && typeof item === "object" && "id" in item
+          ? item.id
+          : randomUUID();
+      const src =
+        item && typeof item === "object" && "src" in item
+          ? item.src
+          : item;
+
+      if (
+        typeof id !== "string" ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id) ||
+        !isValidSuccessImageDataUrl(src)
+      ) {
+        return NextResponse.json(
+          { error: "Each upload must be a valid JPEG under 1MB" },
+          { status: 400 }
+        );
+      }
+
+      images.push({ id, src });
     }
 
     const client = await getClientPromise();
@@ -51,7 +90,7 @@ export async function POST(
       .collection<SuccessCategoryDoc>(COLLECTION)
       .updateOne(
         { _id: new ObjectId(id) },
-        { $push: { images: { $each: images } }, $set: { updatedAt: new Date() } }
+        { $addToSet: { images: { $each: images } }, $set: { updatedAt: new Date() } }
       );
 
     if (result.matchedCount === 0) {
@@ -63,8 +102,9 @@ export async function POST(
 
     return NextResponse.json({ success: true, images });
   } catch (error) {
+    console.error("Failed to add success story images", error);
     return NextResponse.json(
-      { error: (error as Error).message },
+      { error: "Images could not be saved. Please try again." },
       { status: 500 }
     );
   }

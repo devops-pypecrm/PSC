@@ -1,6 +1,8 @@
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import Marquee from "./components/Marquee";
+import ProfessionalSkillCampusIntro from "./components/ProfessionalSkillCampusIntro";
+import MissionVision from "./components/MissionVision";
 import SuccessStories from "./components/SuccessStories";
 import AboutUs from "./components/AboutUs";
 import WhyUs from "./components/WhyUs";
@@ -73,15 +75,17 @@ export default async function Home() {
         <PageBackground />
         <Hero />
         <Marquee />
-        <SuccessStories />
+        <ProfessionalSkillCampusIntro />
+        <MissionVision />
+        <Courses />
         <AboutUs />
         <Certifications />
         <SkillCreators />
-        <Courses />
-        <WhyUs />
-        <Reviews />
         <Directors />
+        <WhyUs />
+        <SuccessStories />
         <SuccessStoriesGallery />
+        <Reviews />
         <FAQ />
       </div>
       <Footer />

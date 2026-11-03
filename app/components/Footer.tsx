@@ -1,11 +1,12 @@
 import Image from "next/image";
 import styles from "./Footer.module.css";
+import { programSlug } from "../lib/programUtils";
 
 const courseLinks = [
-  "Gamified AI Integrated Digital Marketing",
-  "Business Administration & Hospital Management",
-  "AI integrated Accounting & Taxation",
-  "Professional Diploma in Training and Development",
+  "Office Administration + BBA (WBL)",
+  "Digital Marketing + BBA (WBL Progra",
+  "HR Management + BBA (WBL Program)",
+  "Hospital Administrator",
 ];
 
 const importantLinks = [
@@ -80,13 +81,7 @@ export default function Footer() {
           <span className={styles.underline}></span>
           <ul className={styles.list}>
             {courseLinks.map((label) => {
-              const href = label.includes("Digital Marketing")
-                ? "/courses/ai-integrated-digital-marketing"
-                : label.includes("Business Administration")
-                ? "/courses/business-administration-hospital-management"
-                : label.includes("Accounting")
-                ? "/courses/ai-integrated-accounting-taxation"
-                : "/contact";
+              const href = `/courses/${programSlug(label)}`;
               return (
               <li key={label}>
                 <a href={href} className={styles.link}>

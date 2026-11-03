@@ -1,0 +1,128 @@
+.orderToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 16px;
+}
+
+.orderToolbar button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.orderHelp,
+.orderSuccess,
+.orderError,
+.unsavedNotice {
+  margin: 0;
+  font-size: 14px;
+}
+
+.orderHelp {
+  color: #445;
+}
+
+.orderSuccess {
+  margin-top: 5px;
+  color: #16834a;
+  font-weight: 600;
+}
+
+.orderError {
+  margin-top: 5px;
+  color: #d92b3f;
+  font-weight: 600;
+}
+
+.unsavedNotice {
+  margin-top: 12px;
+  color: #9a5b00;
+  font-weight: 600;
+}
+
+.positionCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.positionNumber {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #2451e0;
+  font-weight: 700;
+}
+
+.dragHandle {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid #d7ddec;
+  border-radius: 8px;
+  background: #fff;
+  color: #53617f;
+  font-size: 20px;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+}
+
+.dragHandle:hover {
+  border-color: #2451e0;
+  background: #eef2ff;
+  color: #2451e0;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.positionButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.positionButtons button {
+  width: 24px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #445;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.positionButtons button:hover:not(:disabled) {
+  background: #eef2ff;
+  color: #2451e0;
+}
+
+.positionButtons button:disabled {
+  color: #b7bfce;
+  cursor: not-allowed;
+}
+
+.draggingRow {
+  opacity: 0.45;
+}
+
+.dropTargetRow {
+  outline: 2px dashed #2451e0;
+  outline-offset: -2px;
+}
+
+@media (max-width: 640px) {
+  .orderToolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1400" viewBox="0 0 900 1400" fill="none">
+  <defs>
+    <linearGradient id="background" x1="70" y1="80" x2="830" y2="1320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2451E0"/>
+      <stop offset="1" stop-color="#0F1B3D"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="matrix(0 610 -480 0 450 700)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6EA8FF" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#6EA8FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <path fill="url(#background)" d="M0 0h900v1400H0z"/>
+  <path fill="url(#glow)" d="M0 0h900v1400H0z"/>
+  <circle cx="450" cy="700" r="94" fill="#fff" fill-opacity=".18"/>
+  <path d="M425 652v96l78-48-78-48Z" fill="#fff"/>
+  <text x="450" y="860" fill="#fff" font-family="Arial,sans-serif" font-size="32" font-weight="700" letter-spacing="3" text-anchor="middle">SUCCESS STORY</text>
+</svg>
