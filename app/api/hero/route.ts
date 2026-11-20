@@ -1,53 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import getClientPromise from "../../../lib/mongodb";
 import {
-  DEFAULT_HERO_TAG,
-  DEFAULT_HERO_HEADING,
-  DEFAULT_HERO_CHILDREN,
   HERO_TAG_MAX_CHARS,
   HERO_HEADING_MAX_CHARS,
   HERO_CHILD_HEADING_MAX_CHARS,
   HERO_CHILD_PARAGRAPH_MAX_CHARS,
   countChars,
-  type HeroChild,
 } from "../../lib/heroUtils";
+import { getHeroContent, normalizeHeroChildren } from "../../lib/heroContent";
 
 export const dynamic = "force-dynamic";
 
 const DB_NAME = "psc";
 const COLLECTION = "herocontent";
 
-function normalizeChildren(raw: unknown): HeroChild[] {
-  if (!Array.isArray(raw) || raw.length === 0) return DEFAULT_HERO_CHILDREN;
-  return raw.map((c, i) => {
-    const child = c as Partial<HeroChild> | undefined;
-    return {
-      heading: String(child?.heading ?? "") || DEFAULT_HERO_CHILDREN[i]?.heading || "",
-      paragraph: String(child?.paragraph ?? "") || DEFAULT_HERO_CHILDREN[i]?.paragraph || "",
-      visible: typeof child?.visible === "boolean" ? child.visible : true,
-    };
-  });
-}
-
 export async function GET() {
-  try {
-    const client = await getClientPromise();
-    const doc = await client.db(DB_NAME).collection(COLLECTION).findOne({});
-
-    return NextResponse.json({
-      tag: doc?.tag || DEFAULT_HERO_TAG,
-      heading: doc?.heading || DEFAULT_HERO_HEADING,
-      children: normalizeChildren(doc?.children),
-    });
-  } catch {
-    // Public Home page reads this — degrade to the defaults instead of
-    // breaking the hero if the DB is briefly unreachable.
-    return NextResponse.json({
-      tag: DEFAULT_HERO_TAG,
-      heading: DEFAULT_HERO_HEADING,
-      children: DEFAULT_HERO_CHILDREN,
-    });
-  }
+  return NextResponse.json(await getHeroContent());
 }
 
 export async function PATCH(request: NextRequest) {
@@ -55,7 +23,7 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const tag = String(body.tag ?? "");
     const heading = String(body.heading ?? "");
-    const children = normalizeChildren(body.children);
+    const children = normalizeHeroChildren(body.children);
 
     if (countChars(tag) > HERO_TAG_MAX_CHARS) {
       return NextResponse.json(

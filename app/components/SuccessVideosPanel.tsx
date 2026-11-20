@@ -68,6 +68,12 @@ export default function SuccessVideosPanel() {
   const [formError, setFormError] = useState("");
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [orderMessage, setOrderMessage] = useState<{
+    type: "saving" | "success" | "error";
+    text: string;
+  } | null>(null);
   const [coverImage, setCoverImage] = useState("");
   const [pendingCoverImage, setPendingCoverImage] = useState("");
   const [savingCoverImage, setSavingCoverImage] = useState(false);
@@ -76,16 +82,24 @@ export default function SuccessVideosPanel() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverImageInputRef = useRef<HTMLInputElement>(null);
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
+  const videosRef = useRef<SuccessVideo[]>([]);
+  const dragStateRef = useRef<{
+    videoId: string;
+    pointerId: number;
+    originalVideos: SuccessVideo[];
+  } | null>(null);
+  const dragCleanupRef = useRef<(() => void) | null>(null);
 
   const load = useCallback(() => {
-    setStatus("loading");
     fetch("/api/success-videos")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load videos");
         return res.json();
       })
       .then((data) => {
-        setVideos(data.videos || []);
+        const loadedVideos = data.videos || [];
+        videosRef.current = loadedVideos;
+        setVideos(loadedVideos);
         setCoverImage(data.coverImage || "");
         setStatus("loaded");
       })
@@ -95,6 +109,13 @@ export default function SuccessVideosPanel() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(
+    () => () => {
+      dragCleanupRef.current?.();
+    },
+    []
+  );
 
   useEffect(() => {
     if (!playingId) return;
@@ -195,6 +216,124 @@ export default function SuccessVideosPanel() {
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const handleReorderPointerDown = (
+    event: React.PointerEvent<HTMLButtonElement>,
+    video: SuccessVideo
+  ) => {
+    if (
+      event.button !== 0 ||
+      dragStateRef.current ||
+      orderMessage?.type === "saving"
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    setOrderMessage(null);
+    dragStateRef.current = {
+      videoId: video._id,
+      pointerId: event.pointerId,
+      originalVideos: videosRef.current.slice(),
+    };
+    setDraggingId(video._id);
+
+    const handlePointerMove = (pointerEvent: PointerEvent) => {
+      const dragState = dragStateRef.current;
+      if (!dragState || pointerEvent.pointerId !== dragState.pointerId) return;
+
+      pointerEvent.preventDefault();
+      const target = document
+        .elementFromPoint(pointerEvent.clientX, pointerEvent.clientY)
+        ?.closest<HTMLElement>("[data-video-id]");
+      const targetId = target?.dataset.videoId;
+      if (!target || !targetId || targetId === dragState.videoId) return;
+
+      const currentVideos = videosRef.current;
+      const fromIndex = currentVideos.findIndex(
+        (item) => item._id === dragState.videoId
+      );
+      const targetIndex = currentVideos.findIndex(
+        (item) => item._id === targetId
+      );
+      if (fromIndex < 0 || targetIndex < 0) return;
+
+      const rect = target.getBoundingClientRect();
+      const insertBefore =
+        pointerEvent.clientY < rect.top + rect.height / 2;
+      let toIndex = targetIndex + (insertBefore ? 0 : 1);
+      if (fromIndex < toIndex) toIndex -= 1;
+      setDropTargetId(targetId);
+      if (fromIndex === toIndex) return;
+
+      const reordered = currentVideos.slice();
+      const [movedVideo] = reordered.splice(fromIndex, 1);
+      reordered.splice(toIndex, 0, movedVideo);
+      videosRef.current = reordered;
+      setVideos(reordered);
+    };
+
+    const finishDrag = (pointerEvent: PointerEvent) => {
+      const dragState = dragStateRef.current;
+      if (!dragState || pointerEvent.pointerId !== dragState.pointerId) return;
+
+      dragCleanupRef.current?.();
+      dragStateRef.current = null;
+      setDraggingId(null);
+      setDropTargetId(null);
+
+      if (pointerEvent.type === "pointercancel") {
+        videosRef.current = dragState.originalVideos;
+        setVideos(dragState.originalVideos);
+        return;
+      }
+
+      const reordered = videosRef.current;
+      const changed = reordered.some(
+        (item, index) => item._id !== dragState.originalVideos[index]?._id
+      );
+      if (!changed) return;
+
+      setOrderMessage({ type: "saving", text: "Saving video order..." });
+      void (async () => {
+        try {
+          const response = await fetch("/api/success-videos", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              videoIds: reordered.map((item) => item._id),
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || "Couldn't save the video order.");
+          }
+          setOrderMessage({ type: "success", text: "Video order saved." });
+        } catch (error) {
+          load();
+          setOrderMessage({
+            type: "error",
+            text:
+              error instanceof Error
+                ? error.message
+                : "Couldn't save the video order.",
+          });
+        }
+      })();
+    };
+
+    const cleanup = () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", finishDrag);
+      window.removeEventListener("pointercancel", finishDrag);
+      if (dragCleanupRef.current === cleanup) dragCleanupRef.current = null;
+    };
+
+    dragCleanupRef.current = cleanup;
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", finishDrag);
+    window.addEventListener("pointercancel", finishDrag);
   };
 
   const handleCoverImageChange = async (
@@ -410,7 +549,11 @@ export default function SuccessVideosPanel() {
           </div>
         )}
 
-        <button type="submit" className={styles.createButton} disabled={creating}>
+        <button
+          type="submit"
+          className={styles.createButton}
+          disabled={creating || orderMessage?.type === "saving"}
+        >
           {creating ? "Adding..." : "+ Add Video"}
         </button>
 
@@ -432,68 +575,117 @@ export default function SuccessVideosPanel() {
       )}
 
       {status === "loaded" && videos.length > 0 && (
-        <div className={styles.grid}>
-          {videos.map((video) => (
-            <div className={styles.card} key={video._id}>
-              <button
-                type="button"
-                className={styles.deleteButton}
-                aria-label="Delete video"
-                onClick={() => handleDelete(video)}
-                disabled={deletingId === video._id}
+        <>
+          {orderMessage && (
+            <p
+              className={
+                orderMessage.type === "error"
+                  ? styles.orderMessageError
+                  : styles.orderMessage
+              }
+              role={orderMessage.type === "error" ? "alert" : "status"}
+              aria-live="polite"
+            >
+              {orderMessage.text}
+            </p>
+          )}
+          <div className={styles.grid}>
+            {videos.map((video, index) => (
+              <div
+                className={`${styles.card} ${
+                  draggingId === video._id ? styles.dragging : ""
+                } ${dropTargetId === video._id ? styles.dropTarget : ""}`}
+                key={video._id}
+                data-video-id={video._id}
               >
-                <TrashIcon />
-              </button>
+                <button
+                  type="button"
+                  className={styles.dragHandle}
+                  aria-label={`Drag video ${index + 1} to reorder`}
+                  title="Drag to reorder"
+                  onPointerDown={(event) =>
+                    handleReorderPointerDown(event, video)
+                  }
+                  disabled={orderMessage?.type === "saving"}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <circle cx="5" cy="3" r="1.25" />
+                    <circle cx="11" cy="3" r="1.25" />
+                    <circle cx="5" cy="8" r="1.25" />
+                    <circle cx="11" cy="8" r="1.25" />
+                    <circle cx="5" cy="13" r="1.25" />
+                    <circle cx="11" cy="13" r="1.25" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  className={styles.deleteButton}
+                  aria-label="Delete video"
+                  onClick={() => handleDelete(video)}
+                  disabled={
+                    deletingId === video._id ||
+                    orderMessage?.type === "saving"
+                  }
+                >
+                  <TrashIcon />
+                </button>
 
-              <div className={styles.cardMedia}>
-                <div className={styles.cardBrand}>
-                  <Image
-                    src="/logo-main.png"
-                    alt="Professional Skill Campus"
-                    width={96}
-                    height={32}
-                  />
-                </div>
-                {playingId === video._id ? (
-                  video.sourceType === "upload" ? (
-                    <video
-                      src={video.url}
-                      controls
-                      ref={(player) => {
-                        videoRefs.current[video._id] = player;
-                      }}
-                      className={styles.player}
+                <div className={styles.cardMedia}>
+                  <div className={styles.cardBrand}>
+                    <Image
+                      src="/logo-main.png"
+                      alt="Professional Skill Campus"
+                      width={96}
+                      height={32}
                     />
-                  ) : (
-                    video.sourceType === "youtube" ? (
-                      <YouTubePlayer
-                        video={video}
-                        autoPlay
+                  </div>
+                  {playingId === video._id ? (
+                    video.sourceType === "upload" ? (
+                      <video
+                        src={video.url}
+                        controls
+                        ref={(player) => {
+                          videoRefs.current[video._id] = player;
+                        }}
                         className={styles.player}
                       />
                     ) : (
-                      <iframe
-                        src={toEmbedUrl(video)}
-                        className={styles.player}
-                        allow="autoplay; encrypted-media"
-                        allowFullScreen
-                      />
+                      video.sourceType === "youtube" ? (
+                        <YouTubePlayer
+                          video={video}
+                          autoPlay
+                          className={styles.player}
+                        />
+                      ) : (
+                        <iframe
+                          src={toEmbedUrl(video)}
+                          className={styles.player}
+                          allow="autoplay; encrypted-media"
+                          allowFullScreen
+                        />
+                      )
                     )
-                  )
-                ) : (
-                  <button
-                    type="button"
-                    className={styles.playButton}
-                    onClick={() => setPlayingId(video._id)}
-                    aria-label="Play video"
-                  >
-                    <PlayIcon />
-                  </button>
-                )}
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.playButton}
+                      onClick={() => setPlayingId(video._id)}
+                      aria-label="Play video"
+                    >
+                      <PlayIcon />
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

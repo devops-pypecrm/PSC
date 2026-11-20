@@ -68,7 +68,7 @@ export default function ContactFormSection() {
             <input type="tel" name="phone" placeholder="10-digit mobile number" className={styles.input} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} pattern="[0-9]{10}" title="Phone number must be exactly 10 digits" maxLength={10} required />
             <input type="email" name="email" placeholder="Email" className={styles.input} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}" title="Please enter a valid email address" required />
           </div>
-          <input type="text" name="company" placeholder="Company (optional)" className={styles.input} value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
+          <input type="text" name="company" placeholder="Company (optional)" className={styles.input} style={{ display: "none" }} value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
           <textarea name="enquiry" placeholder="Enquiry" rows={5} className={styles.textarea} value={form.enquiry} onChange={(e) => setForm({ ...form, enquiry: e.target.value })}></textarea>
 
           <button

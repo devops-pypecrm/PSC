@@ -13,11 +13,38 @@ import Certifications from "./components/Certifications";
 import SkillCreators from "./components/SkillCreators";
 import Courses from "./components/Courses";
 import FAQ from "./components/FAQ";
+import AppDownload from "./components/AppDownload";
 import Footer from "./components/Footer";
 import PageBackground from "./components/PageBackground";
 import { Metadata } from "next";
 import { getSiteUrl } from "./lib/getSiteUrl";
+import { getHeroContent } from "./lib/heroContent";
 import styles from "./page.module.css";
+
+const googlePlayStoreUrl = process.env.NEXT_PUBLIC_PSC_GOOGLE_PLAY_URL?.trim();
+
+function isValidGooglePlayStoreUrl(value: string | undefined): value is string {
+  if (!value) return false;
+
+  try {
+    const url = new URL(value);
+    const isGooglePlayHost =
+      url.hostname === "play.google.com" ||
+      url.hostname === "www.play.google.com";
+    const isAppListingPath =
+      url.pathname === "/store/apps/details" ||
+      url.pathname === "/store/apps/details/";
+
+    return (
+      url.protocol === "https:" &&
+      isGooglePlayHost &&
+      isAppListingPath &&
+      Boolean(url.searchParams.get("id")?.trim())
+    );
+  } catch {
+    return false;
+  }
+}
 
 export const metadata: Metadata = {
   title: "Expert IT & Business Training Courses | Professional Skill Campus",
@@ -28,6 +55,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const heroContent = await getHeroContent();
   const siteUrl = getSiteUrl();
   const providerUrl = siteUrl || "https://professionalskillcampus.vercel.app";
 
@@ -73,7 +101,7 @@ export default async function Home() {
       <Navbar />
       <div className={styles.pageContent}>
         <PageBackground />
-        <Hero />
+        <Hero heroContent={heroContent} />
         <Marquee />
         <ProfessionalSkillCampusIntro />
         <MissionVision />
@@ -87,6 +115,9 @@ export default async function Home() {
         <SuccessStoriesGallery />
         <Reviews />
         <FAQ />
+        {isValidGooglePlayStoreUrl(googlePlayStoreUrl) ? (
+          <AppDownload playStoreUrl={googlePlayStoreUrl} />
+        ) : null}
       </div>
       <Footer />
     </>

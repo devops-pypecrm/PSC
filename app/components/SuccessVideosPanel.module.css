@@ -232,6 +232,20 @@
   color: #d92b3f;
 }
 
+.orderMessage {
+  margin: 0 0 16px;
+  color: #247a43;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.orderMessageError {
+  margin: 0 0 16px;
+  color: #d92b3f;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -240,6 +254,45 @@
 
 .card {
   position: relative;
+  transition: opacity 0.18s ease, transform 0.18s ease, outline-color 0.18s ease;
+}
+
+.dragging {
+  z-index: 4;
+  opacity: 0.62;
+  transform: scale(0.97);
+}
+
+.dropTarget {
+  outline: 3px dashed #2451e0;
+  outline-offset: 4px;
+}
+
+.dragHandle {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
+  width: 32px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #24304d;
+  cursor: grab;
+  touch-action: none;
+  box-shadow: 0 4px 10px rgba(15, 27, 61, 0.16);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.dragHandle:disabled {
+  cursor: default;
 }
 
 .deleteButton {

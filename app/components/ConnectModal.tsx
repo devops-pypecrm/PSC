@@ -183,7 +183,10 @@ export default function ConnectModal() {
             />
           </div>
 
-          <div className={`${styles.field} ${styles.leadField}`}>
+          <div
+            className={`${styles.field} ${styles.leadField}`}
+            style={{ display: "none" }}
+          >
             <label htmlFor="connect-company" className={styles.label}>
               Company
             </label>

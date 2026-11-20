@@ -5,6 +5,7 @@ export type SuccessVideo = {
   sourceType: VideoSourceType;
   url: string; // data URI for "upload", the original link otherwise
   createdAt: string;
+  order: number;
   thumbnailUrl?: string;
   coverImageUrl?: string;
   coverImage?: string;

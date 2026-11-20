@@ -138,7 +138,7 @@ export default function ConsultationForm() {
             </div>
           </div>
 
-          <div className={styles.field}>
+          <div className={styles.field} style={{ display: "none" }}>
             <label htmlFor="consult-company" className={styles.fieldLabel}>
               Company
             </label>

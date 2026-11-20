@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Script from "next/script";
 import styles from "./SuccessStories.module.css";
 import {
@@ -608,14 +607,6 @@ export default function SuccessStories() {
                     </button>
                   </>
                 )}
-              <div className={styles.cardBrand}>
-                <Image
-                  src="/logo-main.png"
-                  alt="Professional Skill Campus"
-                  width={96}
-                  height={32}
-                />
-              </div>
               </div>
 
               </div>

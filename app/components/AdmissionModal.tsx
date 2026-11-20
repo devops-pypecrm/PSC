@@ -186,7 +186,10 @@ export default function AdmissionModal({
             />
           </div>
 
-          <div className={`${styles.field} ${styles.leadField}`}>
+          <div
+            className={`${styles.field} ${styles.leadField}`}
+            style={{ display: "none" }}
+          >
             <label htmlFor="admission-company" className={styles.label}>
               Company
             </label>

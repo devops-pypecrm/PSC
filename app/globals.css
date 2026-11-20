@@ -1,6 +1,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-bitcount-prop-single: var(--font-geist-sans);
 }
 
 @media (prefers-color-scheme: dark) {

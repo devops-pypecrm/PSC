@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Bitcount_Prop_Single } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import ConnectModal from "./components/ConnectModal";
 import WhatsAppButton from "./components/WhatsAppButton";
 import { getSiteUrl } from "./lib/getSiteUrl";
@@ -13,17 +13,6 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-const bitcountPropSingle = Bitcount_Prop_Single({
-  variable: "--font-bitcount-prop-single",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  // Next has no precomputed fallback-metrics for this font, so it logs a
-  // "Failed to find font override values" warning on every build. This is
-  // harmless (the font still loads fine) — turning off the automatic
-  // fallback-metrics step just silences the warning.
-  adjustFontFallback: false,
 });
 
 const siteUrl = getSiteUrl();
@@ -69,7 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${bitcountPropSingle.variable}`}
+      className={`${geistSans.variable} ${geistMono.variable}`}
     >
       <body>
         {children}

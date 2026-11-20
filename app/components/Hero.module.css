@@ -183,6 +183,10 @@
   gap: 7px;
 }
 
+.enquiryWide {
+  grid-column: 1 / -1;
+}
+
 .enquiryLabel {
   font-family: var(--font-geist-sans), sans-serif;
   font-size: 13px;

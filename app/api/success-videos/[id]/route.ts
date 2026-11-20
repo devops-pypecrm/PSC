@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import getClientPromise from "../../../../lib/mongodb";
+import {
+  compactSuccessVideoOrder,
+  type OrderedSuccessVideoDocument,
+} from "../../../lib/successVideoOrder";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +26,10 @@ export async function DELETE(
     }
 
     const client = await getClientPromise();
-    const result = await client
+    const collection = client
       .db(DB_NAME)
-      .collection(COLLECTION)
-      .deleteOne({ _id: new ObjectId(id) });
+      .collection<OrderedSuccessVideoDocument>(COLLECTION);
+    const result = await collection.deleteOne({ _id: new ObjectId(id) });
 
     if (result.deletedCount === 0) {
       return NextResponse.json(
@@ -34,6 +38,7 @@ export async function DELETE(
       );
     }
 
+    await compactSuccessVideoOrder(collection);
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(

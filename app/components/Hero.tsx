@@ -1,18 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import AdmissionModal from "./AdmissionModal";
 import styles from "./Hero.module.css";
-import {
-  DEFAULT_HERO_TAG,
-  DEFAULT_HERO_HEADING,
-  DEFAULT_HERO_CHILDREN,
-  type HeroChild,
-} from "../lib/heroUtils";
-import { useSectionVisible } from "../hooks/useSectionVisible";
+import type { HeroContent } from "../lib/heroUtils";
 
-export default function Hero() {
-  const { ref: sectionRef, visible } = useSectionVisible<HTMLElement>();
+export default function Hero({ heroContent }: { heroContent: HeroContent }) {
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -25,33 +18,6 @@ export default function Hero() {
     "idle"
   );
   const [consultationOpen, setConsultationOpen] = useState(false);
-  const [heroContent, setHeroContent] = useState<{
-    tag: string;
-    heading: string;
-    children: HeroChild[];
-  }>({
-    tag: DEFAULT_HERO_TAG,
-    heading: DEFAULT_HERO_HEADING,
-    children: DEFAULT_HERO_CHILDREN,
-  });
-
-  useEffect(() => {
-    if (!visible) return;
-    fetch("/api/hero")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!data) return;
-        setHeroContent({
-          tag: data.tag || DEFAULT_HERO_TAG,
-          heading: data.heading || DEFAULT_HERO_HEADING,
-          children:
-            Array.isArray(data.children) && data.children.length === 3
-              ? data.children
-              : DEFAULT_HERO_CHILDREN,
-        });
-      })
-      .catch(() => {});
-  }, [visible]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -90,7 +56,7 @@ export default function Hero() {
   };
 
   return (
-    <section ref={sectionRef} className={styles.hero}>
+    <section className={styles.hero}>
       <div className={styles.inner}>
         <div className={styles.content}>
           <div className={styles.rating}>
@@ -207,7 +173,7 @@ export default function Hero() {
               />
             </div>
 
-            <div className={styles.enquiryField}>
+            <div className={styles.enquiryField} style={{ display: "none" }}>
               <label htmlFor="enquiry-company" className={styles.enquiryLabel}>
                 Company
               </label>
@@ -222,7 +188,7 @@ export default function Hero() {
               />
             </div>
 
-            <div className={styles.enquiryField}>
+            <div className={`${styles.enquiryField} ${styles.enquiryWide}`}>
               <label htmlFor="enquiry-enquiry" className={styles.enquiryLabel}>
                 Enquiry
               </label>

@@ -3,7 +3,7 @@
   overflow: hidden;
   width: 100%;
   box-sizing: border-box;
-  padding: 72px 24px 96px;
+  padding: 72px 24px 48px;
 }
 
 .heading {
@@ -223,7 +223,7 @@
 
 @media (max-width: 560px) {
   .section {
-    padding: 56px 16px 72px;
+    padding: 56px 16px 40px;
   }
 
   .grid {
