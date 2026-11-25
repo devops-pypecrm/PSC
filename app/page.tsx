@@ -21,7 +21,7 @@ import { getSiteUrl } from "./lib/getSiteUrl";
 import { getHeroContent } from "./lib/heroContent";
 import styles from "./page.module.css";
 
-const googlePlayStoreUrl = process.env.NEXT_PUBLIC_PSC_GOOGLE_PLAY_URL?.trim();
+const googlePlayStoreUrl = "https://play.google.com/store/apps/details?id=com.prohostix.pscskill&hl=en_IN";
 
 function isValidGooglePlayStoreUrl(value: string | undefined): value is string {
   if (!value) return false;
